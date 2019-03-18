@@ -24,6 +24,7 @@
           :link="image.link"
           :src="image.src"
         />
+        <UniversalViewer />
       </b-col>
       <b-col>
         <MetadataField
@@ -51,6 +52,7 @@
   import WebResources from '../../components/record/WebResources';
   import MetadataField from '../../components/record/MetadataField';
   import MediaImage from '../../components/record/MediaImage';
+  import UniversalViewer from '../../components/record/UniversalViewer';
 
   import getRecord from '../../plugins/europeana/record';
 
@@ -59,7 +61,8 @@
       AlertMessage,
       WebResources,
       MetadataField,
-      MediaImage
+      MediaImage,
+      UniversalViewer
     },
     data () {
       return {

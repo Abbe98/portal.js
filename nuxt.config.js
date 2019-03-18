@@ -15,6 +15,11 @@ module.exports = {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
+    script: [
+      { src: 'https://cdn.jsdelivr.net/npm/universalviewer@3.0.16/uv/uv.js', body: true },
+      { src: 'https://cdn.jsdelivr.net/npm/universalviewer@3.0.16/uv/lib/offline.js' },
+      { src: 'https://cdn.jsdelivr.net/npm/universalviewer@3.0.16/uv/helpers.js' }
+    ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Ubuntu:300,400,700%7COpen+Sans:400italic,700italic,400,700&amp;subset=latin,greek,cyrillic' },
