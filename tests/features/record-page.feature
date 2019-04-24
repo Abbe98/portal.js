@@ -12,3 +12,8 @@ Feature: Record page
     When I open `/record/123456/THIS_IDENTIFIER_DOES_NOT_EXIST`
     Then I see an `error notice`
 
+  Scenario: Create a snapshot of a record page
+
+    When I open a `record page`
+    Then I see the `record page`
+    And I make a snapshot of the `record page`

@@ -77,6 +77,9 @@ module.exports = {
     await client.expect.element(selector).to.be.visible;
     await client.setValue(selector, text);
   },
+  makeSnapShot: async function (pageName) {
+    await client.percySnapshot(pageName);
+  },
   openAPage: function (pageName) {
     client.url(pageUrl(pageName));
   },

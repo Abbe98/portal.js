@@ -2,8 +2,10 @@
 
 const chromedriver = require('chromedriver');
 const geckodriver = require('geckodriver');
+const percy = require('@percy/nightwatch');
 
 module.exports = {
+  custom_commands_path: [percy.path],
   test_settings: {
     default: {
       globals: {
@@ -27,7 +29,8 @@ module.exports = {
         browserName: 'chrome',
         chromeOptions: {
           args: ['disable-gpu']
-        }
+        },
+        loggingPrefs: { 'browser': 'ALL' }
       }
     },
     chromeHeadless: {

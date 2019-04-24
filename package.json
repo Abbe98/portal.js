@@ -40,7 +40,8 @@
     "test:chrome:headless": "cross-env browser=chromeHeadless cucumber-js",
     "test:gecko": "cross-env browser=gecko cucumber-js",
     "test:e2e": "concurrently 'npm run build:test && npm run start:test' 'npm run test:chrome -- -p all && npm run test:gecko -- -p all' --success first --kill-others",
-    "test:e2e:ci": "concurrently 'npm run build:test && npm run start:test' 'npm run test:chrome:headless -- -p all' --success first --kill-others"
+    "test:e2e:ci": "concurrently 'npm run build:test && npm run start:test' 'npm run test:chrome:headless -- -p all' --success first --kill-others",
+    "test:e2epercy": "percy exec -- concurrently 'npm run build:test && npm run start:test' 'npm run test:chrome -- -p all && npm run test:gecko -- -p all' --success first --kill-others"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.4.1",
@@ -66,6 +67,8 @@
     "@babel/preset-env": "^7.3.4",
     "@babel/runtime": "^7.3.4",
     "@babel/types": "^7.3.4",
+    "@percy/agent": "^0.3.1",
+    "@percy/nightwatch": "^1.0.3",
     "@storybook/addon-actions": "^5.0.6",
     "@storybook/addon-links": "^5.0.1",
     "@storybook/vue": "^5.0.1",

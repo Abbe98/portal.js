@@ -67,3 +67,6 @@ defineStep('I should have/see/see/spot a meta label {target} with the value {str
 
 defineStep('I should have/see/see/spot a meta label {target} with the value {string} or the value {string}', (label, value, altValue) =>
   i.matchMetaLabelAndValueOrValue(label, value, altValue));
+
+defineStep('I make a snapshot of (a/an/the)( ){target}', (pageName) =>
+  i.makeSnapShot(pageName));
