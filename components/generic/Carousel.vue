@@ -17,6 +17,7 @@
     <div
       ref="thumbnails"
       class="carousel-thumbnails"
+      @mousemove="beginDrag"
     >
       <ol
         ref="slider"
@@ -57,11 +58,10 @@
       };
     },
 
-    mounted() {
-    },
-
     methods: {
-
+      beginDrag(event) {
+        event.preventDefault();
+      }
     }
   };
 </script>
@@ -107,9 +107,24 @@
       display: flex;
       overflow-x: scroll;
       list-style: none;
-      padding: 0;
+      padding: 0 0 4px ;
       transform: scale(0.98);
       width: 100%;
+
+      &::-webkit-scrollbar {
+        height: 6px;
+      }
+      &::-webkit-scrollbar-track {
+        border-radius: 10px;
+        background: #eaeaea;
+      }
+      &::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        background: #b4b4b4;
+      }
+      &::-webkit-scrollbar-thumb:window-inactive {
+        background: rgba(100, 100, 100, 0.4);
+      }
 
       &.is-active {
         transform: scale(1);
