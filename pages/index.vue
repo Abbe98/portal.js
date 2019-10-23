@@ -2,6 +2,9 @@
   <div
     data-qa="browse page"
   >
+    <b-container>
+      <Carousel />
+    </b-container>
     <HeroImage
       v-if="hero"
       :image-url="heroImage.url"
@@ -26,12 +29,14 @@
 </template>
 
 <script>
+  import Carousel from '../components/generic/Carousel';
   import BrowseSections from '../components/browse/BrowseSections';
   import HeroImage from '../components/generic/HeroImage';
   import createClient from '../plugins/contentful';
 
   export default {
     components: {
+      Carousel,
       BrowseSections,
       HeroImage
     },
