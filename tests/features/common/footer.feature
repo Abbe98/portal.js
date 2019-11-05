@@ -25,3 +25,8 @@ Feature: Page Footer
     #And I see a link to "https://pro.europeana.eu/resources/apis" in the `footer`
     #And I see a link to "https://pro.europeana.eu/our-mission/office-employees" in the `footer`
     #And I see a link to "https://www.europeana.eu/portal/en/help.html" in the `footer`
+
+  Scenario: Cookie notice
+    When I open the `home page`
+    And I see the `footer`
+    Then I see a `cookie notice` in the `footer`
