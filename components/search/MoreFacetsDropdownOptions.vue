@@ -5,47 +5,73 @@
     >
       {{ $t(`facets.${facet.name}`).name }}
     </strong>
-    <div class="option-group">
-      <MoreFacetsDropdownOption
-        v-for="(filter, indx) in [].concat(facet.fields).splice(0, limitTo)"
-        :key="indx"
-        :filter="filter"
-        :facet-name="$t(`facets.${facet.name}`).name"
-      />
-    </div>
-    <div
-      v-if="facet.fields.length > limitTo"
-      v-show="isActive"
+    <b-form-checkbox-group
+      v-model="selected"
       class="option-group"
     >
-      <MoreFacetsDropdownOption
-        v-for="(filter, indx) in [].concat(facet.fields).splice(limitTo)"
+      <b-form-checkbox
+        v-for="(filter, indx) in [].concat(facet.fields).splice(0, limitTo)"
+        :id="`${$t(`facets.${facet.name}`).name} - ${filter.label}`"
         :key="indx"
-        :filter="filter"
-        :facet-name="$t(`facets.${facet.name}`).name"
-      />
-    </div>
-    <button
-      v-if="facet.fields.length > limitTo"
-      type="button"
-      class="btn btn-link btn-toggle"
-      :class="{ 'is-active': isActive }"
-      :data-qa="(isActive ? $t(`facets.button.hideAll`) : $t(`facets.button.showAll`)) + ' ' + $t(`facets.${facet.name}`).plural + ' button'"
-      @click.prevent="isActive = !isActive"
-    >
-      {{ isActive ? $t(`facets.button.hideAll`) : $t(`facets.button.showAll`) }} {{ $t(`facets.${facet.name}`).plural }}
-    </button>
+        :value="filter.label"
+        :name="filter.label"
+        class="mb-3"
+        plain
+      >
+        {{ filter.label }}
+        <span
+          class="reset"
+          :aria-label="$t('facets.button.reset')"
+        >
+          <span
+            class="icon-close"
+            aria-hidden="true"
+            :title="`Reset ${filter.label}`"
+          />
+        </span>
+      </b-form-checkbox>
+      <div
+        v-if="facet.fields.length > limitTo"
+        v-show="isActive"
+      >
+        <b-form-checkbox
+          v-for="(filter, indx) in [].concat(facet.fields).splice(limitTo)"
+          :id="`${$t(`facets.${facet.name}`).name} - ${filter.label}`"
+          :key="indx"
+          :value="filter.label"
+          :name="filter.label"
+          class="mb-3"
+          plain
+        >
+          {{ filter.label }}
+          <span
+            class="reset"
+            :aria-label="$t('facets.button.reset')"
+          >
+            <span
+              class="icon-close"
+              aria-hidden="true"
+              :title="`Reset ${filter.label}`"
+            />
+          </span>
+        </b-form-checkbox>
+      </div>
+      <button
+        v-if="facet.fields.length > limitTo"
+        type="button"
+        class="btn btn-link btn-toggle"
+        :class="{ 'is-active': isActive }"
+        :data-qa="(isActive ? $t(`facets.button.hideAll`) : $t(`facets.button.showAll`)) + ' ' + $t(`facets.${facet.name}`).plural + ' button'"
+        @click.prevent="isActive = !isActive"
+      >
+        {{ isActive ? $t(`facets.button.hideAll`) : $t(`facets.button.showAll`) }} {{ $t(`facets.${facet.name}`).plural }}
+      </button>
+    </b-form-checkbox-group>
   </b-dropdown-form>
 </template>
 
 <script>
-  import MoreFacetsDropdownOption from '../../components/search/MoreFacetsDropdownOption';
-
   export default {
-    components: {
-      MoreFacetsDropdownOption
-    },
-
     props: {
       index: {
         type: Number,
@@ -60,7 +86,8 @@
     data() {
       return {
         isActive: false,
-        limitTo: 9
+        limitTo: 9,
+        test: ''
       };
     }
   };

@@ -15,7 +15,8 @@ export const state = () => ({
   totalResults: null,
   view: null,
   pill: null,
-  autoSuggestDisabled: false
+  autoSuggestDisabled: false,
+  moreFilters: []
 });
 
 export const mutations = {
@@ -81,6 +82,9 @@ export const mutations = {
   },
   setAutoSuggestDisable(state, value) {
     state.autoSuggestDisabled = value;
+  },
+  setMoreFilters(state, value) {
+    state.moreFilters = value;
   }
 };
 

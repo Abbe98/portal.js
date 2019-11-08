@@ -54,9 +54,10 @@
           display: flex;
         }        
 
-        .form-check {
+        .custom-checkbox {
           padding-left: 0;
           padding-right: 1rem;
+          margin-right: 0;
 
           @media (min-width: $bp-large) {
             flex: 0 0 calc(100% / 3);
