@@ -8,6 +8,7 @@
     <b-form-checkbox-group
       v-model="selected"
       class="option-group"
+      plain
     >
       <b-form-checkbox
         v-for="(filter, indx) in [].concat(facet.fields).splice(0, limitTo)"
@@ -16,7 +17,6 @@
         :value="filter.label"
         :name="filter.label"
         class="mb-3"
-        plain
       >
         {{ filter.label }}
         <span
@@ -33,6 +33,7 @@
       <div
         v-if="facet.fields.length > limitTo"
         v-show="isActive"
+        class="option-group"
       >
         <b-form-checkbox
           v-for="(filter, indx) in [].concat(facet.fields).splice(limitTo)"
@@ -87,8 +88,14 @@
       return {
         isActive: false,
         limitTo: 9,
-        test: ''
+        selected: ''
       };
+    },
+
+    watch: {
+      selected() {
+        this.$store.commit('search/setMoreFilters', this.selected);
+      }
     }
   };
 </script>

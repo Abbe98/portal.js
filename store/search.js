@@ -84,7 +84,10 @@ export const mutations = {
     state.autoSuggestDisabled = value;
   },
   setMoreFilters(state, value) {
-    state.moreFilters = value;
+    const test = [].concat(value);
+
+    console.log('test', test);
+    state.moreFilters = test;
   }
 };
 
