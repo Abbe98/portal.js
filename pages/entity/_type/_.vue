@@ -246,9 +246,13 @@
       let hiddenParams = {
         qf: [contentTierQuery]
       };
+      let cache = false;
 
       if (store.state.entity.themes[entityUri]) {
         hiddenParams.theme = store.state.entity.themes[entityUri];
+        if (!query.qf && !query.query && !query.reusability) {
+          cache = true;
+        }
       } else {
         const entityQuery = entities.getEntityQuery(entityUri);
         hiddenParams.qf.push(entityQuery);
@@ -257,6 +261,7 @@
       const apiParams = {
         ...query,
         hidden: hiddenParams,
+        cache,
         rows: PER_PAGE
       };
       await store.dispatch('search/run', apiParams);

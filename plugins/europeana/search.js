@@ -150,7 +150,7 @@ export function selectedFacetsFromQuery(query) {
  * @param {string} params.wskey API key
  * @return {{results: Object[], totalResults: number, facets: FacetSet, error: string}} search results for display
  */
-function search(params) {
+function search(params, options = {}) {
   const maxResults = 1000;
   const perPage = params.rows === undefined ? 24 : Number(params.rows);
   const page = params.page || 1;
@@ -159,7 +159,10 @@ function search(params) {
 
   const query = (typeof params.query === 'undefined' || params.query === '') ? '*:*' : params.query;
 
-  return axios.get('https://api.europeana.eu/api/v2/search.json', {
+  const viaCache = process.env.RECORD_API_CACHE_ORIGIN && options.cache;
+  const apiOrigin = viaCache ? process.env.RECORD_API_CACHE_ORIGIN : 'https://api.europeana.eu';
+
+  return axios.get(`${apiOrigin}/api/v2/search.json`, {
     paramsSerializer(params) {
       return qs.stringify(params, { arrayFormat: 'repeat' });
     },

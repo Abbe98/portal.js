@@ -107,6 +107,9 @@ export const actions = {
    * @param {Object} params parameters for search
    */
   async run({ commit, dispatch }, params) {
+    const cache = params.cache || false;
+    delete params.cache;
+
     const hiddenParams = params.hidden || {};
     delete params.hidden;
 
@@ -124,7 +127,7 @@ export const actions = {
     await search({
       ...params,
       wskey: process.env.EUROPEANA_API_KEY
-    })
+    }, { cache })
       .then((response) => {
         dispatch('updateForSuccess', response);
       })
