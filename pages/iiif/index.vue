@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div id="viewer" />
+    <div id="tify" />
   </div>
 </template>
 
@@ -10,27 +10,8 @@
 
     data() {
       return {
-        MIRADOR_BUILD_PATH: 'https://unpkg.com/mirador@3.0.0-alpha.16/dist/',
-        uri: null
+        TIFY_BUILD_PATH: 'https://unpkg.com/tify@0.21.2/dist'
       };
-    },
-
-    asyncData({ query }) {
-      return {
-        uri: query.uri
-      };
-    },
-
-    mounted() {
-      this.$nextTick(() => {
-        Mirador.viewer({ // eslint-disable-line no-undef
-          id: 'viewer',
-          windows: [{
-            manifestId: this.uri,
-            thumbnailNavigationPosition: 'far-bottom'
-          }]
-        });
-      });
     },
 
     head() {
@@ -38,7 +19,11 @@
         title: 'IIIF',
 
         script: [
-          { src: `${this.MIRADOR_BUILD_PATH}/mirador.min.js` }
+          { src: `${this.TIFY_BUILD_PATH}/tify.js`, body: true }
+        ],
+
+        link: [
+          { rel: 'stylesheet', href: `${this.TIFY_BUILD_PATH}/tify.css` }
         ]
       };
     }
@@ -46,7 +31,7 @@
 </script>
 
 <style lang="scss" scoped>
-  #viewer {
+  #tify {
     width: 100%;
     height: 100%;
     position: fixed;
