@@ -89,7 +89,6 @@ export function rangeFromQueryParam(paramValue) {
  */
 function resultsFromApiResponse(response) {
   const items = response.data.items;
-
   const results = items.map(item => {
     return {
       europeanaId: item.id,
@@ -186,6 +185,9 @@ function search(params, options = {}) {
       query,
       reusability: params.reusability,
       rows,
+      // TODO: remove this before merging! just used for benchmarking with
+      //       consistent search results
+      sort: 'has_media desc,score desc,timestamp_update desc,europeana_completeness desc,europeana_id asc',
       start,
       theme: params.theme,
       wskey: params.wskey

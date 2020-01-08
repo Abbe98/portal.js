@@ -7,7 +7,7 @@
     <b-img-lazy
       v-for="(thumbnail, index) of thumbnails"
       :key="index"
-      :src="thumbnail.src"
+      :src="thumbnail.src | optimisedImageUrl"
       :class="thumbnailImgClass(thumbnail, index)"
       :data-about="thumbnail.about"
       :data-qa="`media thumbnail #${index + 1}`"

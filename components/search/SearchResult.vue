@@ -29,7 +29,7 @@
     <b-media-aside class="media-image">
       <b-img-lazy
         slot="aside"
-        :src="edmPreview"
+        :src="edmPreview | optimisedImageUrl"
         alt=""
         class="mw-100 w-100"
         data-field-name="edmPreview"

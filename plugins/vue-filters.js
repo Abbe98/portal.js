@@ -20,20 +20,28 @@ Vue.filter('truncate', (val, char, ellipsis) => {
 });
 
 Vue.filter('optimisedImageUrl', (imageUrl, contentType, options = {}) => {
-  if (typeof contentType !== 'string') return imageUrl;
-
   let imageQueryParams = [];
 
   const hostnameMatch = imageUrl.match(/\/\/([^/]+)\//);
-  if (hostnameMatch && (hostnameMatch[1] === 'images.ctfassets.net')) {
-    // TODO: are optimisations possible on any other content types?
-    if (contentType === 'image/jpeg') imageQueryParams.push('fm=jpg&fl=progressive&q=50');
 
-    if (options.width) imageQueryParams.push(`w=${options.width}`);
-    if (options.height) imageQueryParams.push(`h=${options.height}`);
+  if (hostnameMatch) {
+    switch (hostnameMatch[1]) {
+      case 'images.ctfassets.net':
+        if (typeof contentType === 'string' && contentType === 'image/jpeg')
+          imageQueryParams.push('fm=jpg&fl=progressive&q=50');
+
+        if (options.width) imageQueryParams.push(`w=${options.width}`);
+        if (options.height) imageQueryParams.push(`h=${options.height}`);
+
+        if (imageQueryParams.length > 0) imageUrl += '?' + imageQueryParams.join('&');
+        break;
+      case 'api.europeana.eu':
+        //imageUrl = imageUrl.replace('api.europeana.eu', 'api-acc.eanadev.org');
+        imageUrl = imageUrl.replace('api.europeana.eu', 'api-acc.europeana.eu')
+          .replace('/api/v2/thumbnail-by-url.json', '/cdn-cgi/image/format=auto,quality=70/api/v2/thumbnail-by-url.json');
+        break;
+    }
   }
-
-  if (imageQueryParams.length > 0) imageUrl += '?' + imageQueryParams.join('&');
 
   return imageUrl;
 });
