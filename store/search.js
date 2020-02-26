@@ -1,4 +1,3 @@
-import axios from 'axios';
 import merge from 'deepmerge';
 import search, { unquotableFacets } from '../plugins/europeana/search';
 
@@ -290,7 +289,7 @@ export const actions = {
     const toQuery = options.toQuery || ['items', 'facets'];
     await dispatch('deriveApiSettings');
 
-    await axios.all([
+    await Promise.all([
       toQuery.includes('items') ? dispatch('queryItems') : () => null,
       toQuery.includes('facets') ? dispatch('queryFacets') : () => null
     ]);
@@ -299,7 +298,7 @@ export const actions = {
   async queryItems({ dispatch, state }) {
     const paramsForItems = {
       ...state.apiParams,
-      facet: null
+      facet: undefined
     };
 
     await search(paramsForItems, state.apiOptions || {})
@@ -318,9 +317,20 @@ export const actions = {
       profile: 'facets'
     };
 
-    await search(paramsForFacets, state.apiOptions || {})
-      .then((response) => {
-        commit('setFacets', response.facets);
+    await Promise.all(paramsForFacets.facet.split(',').map(async(facet) => {
+      const paramsForFacet = {
+        ...paramsForFacets,
+        facet
+      };
+      return search(paramsForFacet, state.apiOptions || {});
+    }))
+      .then((responses) => {
+        const combinedFacets = responses.reduce((memo, response) => {
+          memo = memo.concat(response.facets);
+          return memo;
+        }, []);
+        commit('setFacets', combinedFacets);
+
         const collection = getters.collection;
         if (getters.hasCollectionSpecificSettings(collection) && rootState.collections[collection]['facets'] !== undefined) {
           commit(`collections/${collection}/set`, ['facets', state.facets], { root: true });
