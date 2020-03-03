@@ -1,5 +1,6 @@
 import { diff } from 'deep-object-diff';
 import merge from 'deepmerge';
+import chunk from 'lodash/chunk';
 import search, { unquotableFacets } from '../plugins/europeana/search';
 
 // Default facets to always request and display.
@@ -312,7 +313,7 @@ export const actions = {
       });
   },
 
-  queryFacets({ commit, getters, rootState, rootGetters, dispatch, state }) {
+  async queryFacets({ commit, getters, rootState, rootGetters, dispatch, state }) {
     if (!state.active) return;
 
     const paramsForFacets = {
@@ -321,9 +322,28 @@ export const actions = {
       profile: 'facets'
     };
 
-    return search(paramsForFacets, state.apiOptions || {})
-      .then((response) => {
-        commit('setFacets', response.facets);
+    // We could just request each facet individually which would be fastest
+    // per-request, but need to account for the fact that browsers limit
+    // the number of concurrent requests to each origin which could introduce
+    // a further bottleneck if too many.
+    const chunkSize = 2;
+    const chunkedFacets = chunk(paramsForFacets.facet.split(','), chunkSize);
+
+    await Promise.all(chunkedFacets.map(async(chunk) => {
+      const facet = chunk.join(',');
+      const paramsForFacet = {
+        ...paramsForFacets,
+        facet
+      };
+      return search(paramsForFacet, state.apiOptions || {});
+    }))
+      .then((responses) => {
+        const combinedFacets = responses.reduce((memo, response) => {
+          memo = memo.concat(response.facets);
+          return memo;
+        }, []);
+        commit('setFacets', combinedFacets);
+
         const collection = getters.collection;
         if (getters.hasCollectionSpecificSettings(collection) && rootState.collections[collection]['facets'] !== undefined) {
           commit(`collections/${collection}/set`, ['facets', state.facets], { root: true });
