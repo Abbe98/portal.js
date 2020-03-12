@@ -8,6 +8,10 @@
       :image-src="imageSrc"
       :media="media"
     />
+    <MediaPlayer
+      v-else-if="isPlayableMedia"
+      :identifier="identifier"
+    />
     <VideoPlayer
       v-else-if="isHTMLVideo"
       :europeana-identifier="europeanaIdentifier"
@@ -39,6 +43,7 @@
 
 <script>
   import MediaImage from '../../components/record/MediaImage';
+  import MediaPlayer from '../../components/media/MediaPlayer';
   import VideoPlayer from '../../components/media/VideoPlayer';
   import AudioPlayer from '../../components/media/AudioPlayer';
   import HTMLEmbed from '../../components/generic/HTMLEmbed';
@@ -54,6 +59,7 @@
 
     components: {
       MediaImage,
+      MediaPlayer,
       VideoPlayer,
       AudioPlayer,
       HTMLEmbed
@@ -76,7 +82,8 @@
 
     data() {
       return {
-        oEmbedData: {}
+        oEmbedData: {},
+        isPlayableMedia: false
       };
     },
 

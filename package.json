@@ -57,6 +57,7 @@
     "elastic-apm-node": "^2.16.1",
     "express": "^4.16.4",
     "express-ipfilter": "^1.0.1",
+    "europeana-media-player": "git+https://git@github.com/europeana/media-player.git#master",
     "http-auth": "^3.2.3",
     "is-https": "^1.0.0",
     "lodash": "^4.17.15",
