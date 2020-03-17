@@ -1,6 +1,4 @@
 import createClient from '../plugins/contentful';
-const contentfulClient = createClient();
-
 import { getEntityQuery } from '../plugins/europeana/entity';
 
 export const state = () => ({
@@ -51,6 +49,8 @@ export const getters = {
 
 export const actions = {
   async init({ commit }) {
+    const contentfulClient = await createClient();
+
     // TODO: account for potential pagination if > 1,000 entries
     await contentfulClient.getEntries({
       'content_type': 'entityPage',
