@@ -6,7 +6,7 @@ import axios from 'axios';
 import qs from 'qs';
 import { config } from './';
 import { apiError } from './utils';
-import { genericThumbnail } from './thumbnail';
+// import { genericThumbnail } from './thumbnail';
 
 // Some facets do not support enquoting of their field values.
 export const unquotableFacets = [
@@ -68,6 +68,11 @@ export function rangeFromQueryParam(paramValue) {
 
   return { start, end };
 }
+
+
+import { URL } from '../url';
+import md5 from 'md5';
+
 /**
  * Extract search results from API response
  * @param  {Object} response API response
@@ -77,9 +82,16 @@ function resultsFromApiResponse(response) {
   const items = response.data.items;
 
   const results = items.map(item => {
+    const edmPreview = new URL(item.edmPreview);
+    const uri = edmPreview.searchParams.get('uri');
+    const hash = md5(uri);
+    const thumbnail = `https://api.europeana.eu/thumbnail/200/${hash}`;
+    // TODO: also handle absent edmPreview
+
+
     return {
       europeanaId: item.id,
-      edmPreview: item.edmPreview ? `${item.edmPreview[0]}&size=w200` : genericThumbnail(item.id, { type: item.type, size: 'w200' }),
+      edmPreview: thumbnail, //item.edmPreview ? `${item.edmPreview[0]}&size=w200` : genericThumbnail(item.id, { type: item.type, size: 'w200' }),
       dcTitle: item.dcTitleLangAware,
       dcDescription: item.dcDescriptionLangAware,
       dcCreator: item.dcCreatorLangAware,
@@ -129,6 +141,7 @@ export function search(params, options = {}) {
       reusability: params.reusability,
       rows,
       start,
+      sort: 'europeana_id asc',
       wskey: params.wskey || config.record.key
     }
   })
