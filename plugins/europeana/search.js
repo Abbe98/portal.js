@@ -121,16 +121,16 @@ export function search(params, options = {}) {
     paramsSerializer(params) {
       return qs.stringify(params, { arrayFormat: 'repeat' });
     },
-    params: {
+    params: addContentTierFilter({
       facet: params.facet,
       profile: params.profile,
-      qf: addContentTierFilter(params.qf),
+      qf: params.qf,
       query,
       reusability: params.reusability,
       rows,
       start,
       wskey: params.wskey || config.record.key
-    }
+    })
   })
     .then((response) => {
       return {
@@ -154,22 +154,34 @@ export function search(params, options = {}) {
  * @param {(string|string[])} params.qf query filter(s) as passed into the search plugin.
  * @return {string[]} qf adjusted with the desired content tier filter
  */
-export function addContentTierFilter(qf) {
-  let newQf = qf ? [].concat(qf) : [];
-  if (!hasFilterForField(newQf, 'contentTier')) {
+export function addContentTierFilter(params) {
+  params.qf = params.qf ? [].concat(params.qf) : [];
+
+  const collectionFilterIndex = findIndexOfFilterForField(params.qf, 'collection');
+  if (collectionFilterIndex !== -1) {
+    const collectionFilter = params.qf[collectionFilterIndex].split(':')[1];
+    params.theme = collectionFilter;
+    params.qf.splice(collectionFilterIndex, 1);
+  }
+
+  if (!hasFilterForField(params.qf, 'contentTier')) {
     // If no content tier qf is queried, tier 0 content is
     // excluded by default as it is considered not to meet
     // Europeana's publishing criteria. Also tier 1 content is exluded if this
     // is a search filtered by collection.
-    const contentTierFilter = hasFilterForField(newQf, 'collection') ? '2 OR 3 OR 4' : '1 OR 2 OR 3 OR 4';
-    newQf.push(`contentTier:(${contentTierFilter})`);
+    const contentTierFilter = params.theme ? '2 OR 3 OR 4' : '1 OR 2 OR 3 OR 4';
+    params.qf.push(`contentTier:(${contentTierFilter})`);
   }
   // contentTier:* is redundant so is removed
-  newQf = newQf.filter(v => v !== 'contentTier:*');
+  params.qf = params.qf.filter(v => v !== 'contentTier:*');
 
-  return newQf;
+  return params;
 }
 
+const findIndexOfFilterForField = (filters, fieldName) => {
+  return filters.findIndex(v => new RegExp(`^${fieldName}:`).test(v));
+};
+
 const hasFilterForField = (filters, fieldName) => {
-  return filters.some(v => new RegExp(`^${fieldName}:`).test(v));
+  return findIndexOfFilterForField(filters, fieldName) !== -1;
 };
