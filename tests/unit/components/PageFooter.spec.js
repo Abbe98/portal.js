@@ -1,13 +1,51 @@
-import { shallowMount } from '@vue/test-utils';
+import { createLocalVue, shallowMount } from '@vue/test-utils';
+import BootstrapVue from 'bootstrap-vue';
+import SmartLink from '../../../components/generic/SmartLink.vue';
 import PageFooter from '../../../components/PageFooter.vue';
 
-const factory = () => shallowMount(PageFooter);
+const localVue = createLocalVue();
+localVue.use(BootstrapVue);
+localVue.component('SmartLink', SmartLink);
 
-describe('components/search/PageFooter', () => {
-  it('it exists', () => {
+const dummyStore = {
+  state: {
+    'link-group': {
+      data: {
+        footerMoreInfo: {
+          name: 'More info',
+          links: [
+            { url: 'https://www.example.org', text: 'Example link' },
+            { url: 'https://www.europeana.eu', text: 'Europeana link' }
+          ]
+        },
+        footerHelp: {
+          name: 'Help',
+          links: [
+            { url: 'https://www.example.org', text: 'Example link' },
+            { url: 'https://www.europeana.eu', text: 'Europeana link' }
+          ]
+        }
+      }
+    }
+  }
+};
+
+const factory = () => shallowMount(PageFooter, {
+  localVue,
+  mocks: {
+    $t: () => {},
+    $store: dummyStore
+  }
+});
+
+describe('components/PageFooter', () => {
+  it('contains the language selector', () => {
     const wrapper = factory();
+    wrapper.setProps({
+      enableLanguageSelector: true
+    });
+    const selector = wrapper.find('[data-qa="language selector"]');
 
-    const footer = wrapper.find('footer');
-    footer.should.exist;
+    selector.isVisible().should.equal(true);
   });
 });

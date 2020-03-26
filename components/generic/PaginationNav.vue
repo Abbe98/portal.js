@@ -44,13 +44,13 @@
         }
       }
     },
-    data () {
+    data() {
       return {
         currentPage: this.value
       };
     },
     computed: {
-      totalPages: function () {
+      totalPages() {
         return Math.ceil(Math.min(Math.max(this.totalResults, 1), maxResults) / this.perPage);
       }
     },
@@ -58,6 +58,7 @@
       value: {
         immediate: true,
         handler(val) {
+          // Without this, using the browser back button will not update the highlighted pagination
           this.currentPage = val;
         }
       }

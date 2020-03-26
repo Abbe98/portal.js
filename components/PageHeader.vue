@@ -1,54 +1,59 @@
 <template>
   <b-container
     fluid
-    class="border-bottom mb-3 p-0"
+    class="border-bottom p-0 mb-3"
   >
     <b-container class="p-0">
       <b-navbar
-        class="pb-3 pt-sm-3 flex-column flex-md-row"
+        class="pb-3 pt-3 flex-column flex-xl-row"
         data-qa="header"
       >
         <b-navbar-brand
-          href="/"
-          class="col-md-4 p-0 m-0 text-center text-md-left"
+          class="col-xl-3 p-0 m-0 text-center text-xl-left"
         >
-          <img
-            src="../assets/img/logo.svg"
-            alt="Europeana Collections logo"
-            class="mb-2 mb-sm-0 mw-100"
-            data-qa="logo"
+          <SmartLink
+            :destination="{ name: 'index' }"
           >
+            <img
+              src="../assets/img/logo.svg"
+              :alt="$t('homeLinkAlt')"
+              class="mb-2 mb-sm-0 mw-100"
+              data-qa="logo"
+            >
+          </SmartLink>
         </b-navbar-brand>
-        <b-navbar-nav class="ml-auto w-100 col-md-6 col-lg-6 p-0 pt-3 pt-md-0">
-          <SearchForm
-            v-model="query"
-            :is-loading="isLoading"
-            class="justify-content-center justify-content-md-end w-100"
-            @submit:searchForm="submitSearchForm"
-          />
-        </b-navbar-nav>
+        <SearchForm
+          data-qa="search form"
+          class="col-xl-5 w-100 py-3 py-xl-0"
+          :enable-auto-suggest="enableAutoSuggest"
+          :enable-suggestion-validation="enableSuggestionValidation"
+        />
+        <PageNavigation />
       </b-navbar>
     </b-container>
   </b-container>
 </template>
 
 <script>
+  import SmartLink from './generic/SmartLink';
   import SearchForm from './search/SearchForm';
+  import PageNavigation from './PageNavigation';
 
   export default {
     components: {
-      SearchForm
+      SmartLink,
+      SearchForm,
+      PageNavigation
     },
-    data () {
-      return {
-        query: null,
-        isLoading: false
-      };
-    },
-    methods: {
-      submitSearchForm () {
-        this.$router.push({ name: 'search', query: { query: this.query ? this.query : '' } });
-        this.query = '';
+
+    props: {
+      enableAutoSuggest: {
+        type: Boolean,
+        default: false
+      },
+      enableSuggestionValidation: {
+        type: Boolean,
+        default: false
       }
     }
   };
@@ -59,5 +64,9 @@
 
   .container-fluid {
     background: $white;
+  }
+
+  .form-inline {
+    width: 40%;
   }
 </style>

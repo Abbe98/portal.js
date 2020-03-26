@@ -1,10 +1,10 @@
 <template>
-  <div
+  <section
     v-if="section && section.fields"
-    class="browse-section mb-5"
+    class="browse-section row mb-5"
     data-qa="browse section"
   >
-    <div class="col-12 col-lg-6 p-0">
+    <div class="col-12 col-lg-9">
       <h2
         data-qa="section headline"
       >
@@ -14,34 +14,49 @@
         {{ section.fields.text }}
       </p>
     </div>
-    <b-card-group
-      deck
-      data-qa="section group"
-    >
-      <ContentCard
-        v-for="card in section.fields.hasPart"
-        :key="card.sys.id"
-        :name="card.fields.name"
-        :description="card.fields.description"
-        :url="card.fields.url"
-        :image-url="card.fields.image.fields.file.url"
-        :image-title="card.fields.image.fields.title"
-      />
-    </b-card-group>
-  </div>
+    <div class="col-12">
+      <b-card-group
+        class="card-deck-4-cols"
+        deck
+        data-qa="section group"
+      >
+        <BrowseContentCard
+          v-for="card in cards"
+          :key="card.sys.id"
+          :fields="card.fields"
+          :card-type="card.sys.contentType ? card.sys.contentType.sys.id : ''"
+        />
+      </b-card-group>
+      <SmartLink
+        v-if="section.fields.moreButton"
+        :destination="section.fields.moreButton.fields.url"
+        class="btn btn-light"
+        data-qa="section more button"
+      >
+        {{ section.fields.moreButton.fields.text }}
+      </SmartLink>
+    </div>
+  </section>
 </template>
 
 <script>
-  import ContentCard from '../generic/ContentCard';
+  import BrowseContentCard from './BrowseContentCard';
+  import SmartLink from '../generic/SmartLink';
 
   export default {
     components: {
-      ContentCard
+      BrowseContentCard,
+      SmartLink
     },
     props: {
       section: {
         type: Object,
         default: () => {}
+      }
+    },
+    computed: {
+      cards() {
+        return this.section.fields.hasPart.filter(card => card.fields);
       }
     }
   };
@@ -54,18 +69,17 @@
 .browse-section {
   h2,
   p {
+    color: $mediumgrey;
     text-align: left;
   }
 
   h2 {
-    color: $darkgrey;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
     letter-spacing: 0.12125rem;
   }
 
   p {
-    color: $midgrey;
     letter-spacing: 0.0975rem;
     line-height: 1.5;
   }

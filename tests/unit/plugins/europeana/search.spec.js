@@ -1,135 +1,177 @@
 import nock from 'nock';
-import search, { pageFromQuery, selectedFacetsFromQuery } from '../../../../plugins/europeana/search';
+import {
+  search, addContentTierFilter, rangeToQueryParam, rangeFromQueryParam
+} from '../../../../plugins/europeana/search';
+import config from '../../../../modules/apis/defaults';
 
 import axios from 'axios';
 axios.defaults.adapter = require('axios/lib/adapters/http');
 
-const apiUrl = 'https://api.europeana.eu';
-const apiEndpoint = '/api/v2/search.json';
+const apiOrigin = config.record.origin;
+const apiEndpoint = `${config.record.path}/search.json`;
 const apiKey = 'abcdef';
 
-const baseRequest = nock(apiUrl).get(apiEndpoint);
+const baseRequest = nock(apiOrigin).get(apiEndpoint);
 const defaultResponse = { success: true, items: [], totalResults: 123456 };
 
 describe('plugins/europeana/search', () => {
+  beforeEach(() => {
+    config.record.key = apiKey;
+  });
+
   afterEach(() => {
     nock.cleanAll();
   });
 
   describe('search()', () => {
     describe('API request', () => {
-      it('includes API key', async () => {
+      it('includes API key', async() => {
         baseRequest
           .query(query => {
             return query.wskey === apiKey;
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', wskey: apiKey });
+        await search({ query: 'anything' });
 
         nock.isDone().should.be.true;
       });
 
-      it('requests 24 results', async () => {
+      it('requests 24 results by default', async() => {
         baseRequest
           .query(query => {
             return query.rows === '24';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', wskey: apiKey });
+        await search({ query: 'anything' });
 
         nock.isDone().should.be.true;
       });
 
-      it('paginates if `page` is passed', async () => {
+      it('accepts and uses `rows` option', async() => {
+        baseRequest
+          .query(query => {
+            return query.rows === '9';
+          })
+          .reply(200, defaultResponse);
+
+        await search({ query: 'anything', rows: 9 });
+
+        nock.isDone().should.be.true;
+      });
+
+      it('paginates if `page` is passed', async() => {
         baseRequest
           .query(query => {
             return query.rows === '24' && query.start === '25';
           })
           .reply(200, defaultResponse);
 
-        await search({ page: 2, query: 'anything', wskey: apiKey });
+        await search({ page: 2, query: 'anything' });
 
         nock.isDone().should.be.true;
       });
 
-      it('does not request rows beyond API limit', async () => {
+      it('does not request rows beyond API limit', async() => {
         baseRequest
           .query(query => {
             return query.rows === '16' && query.start === '985';
           })
           .reply(200, defaultResponse);
 
-        await search({ page: 42, query: 'anything', wskey: apiKey });
+        await search({ page: 42, query: 'anything' });
 
         nock.isDone().should.be.true;
       });
 
-      it('requests the minimal & facets profiles', async () => {
+      it('includes contentTier query', async() => {
         baseRequest
           .query(query => {
-            return query.profile === 'minimal,facets';
+            return query.qf === 'contentTier:(1 OR 2 OR 3 OR 4)';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', wskey: apiKey });
+        await search({ query: 'anything' });
 
         nock.isDone().should.be.true;
       });
 
-      it('requests specific facets (only)', async () => {
+      it('uses the supplied `facet` param', async() => {
         baseRequest
           .query(query => {
-            return query.facet === 'COUNTRY,REUSABILITY,TYPE';
+            return query.facet === 'LANGUAGE';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', wskey: apiKey });
+        await search({ query: 'anything', facet: 'LANGUAGE' });
 
         nock.isDone().should.be.true;
       });
 
-      it('ignores supplied `facet` param', async () => {
+      it('uses the supplied `facet` param when using comma seperated list', async() => {
         baseRequest
           .query(query => {
-            return query.facet === 'COUNTRY,REUSABILITY,TYPE';
+            return query.facet === 'COUNTRY,REUSABILITY';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', facet: 'LANGUAGE', wskey: apiKey });
+        await search({ query: 'anything', facet: 'COUNTRY,REUSABILITY' });
 
         nock.isDone().should.be.true;
       });
 
-      it('maps blank `query` to "*:*"', async () => {
+      it('maps blank `query` to "*:*"', async() => {
         baseRequest
           .query(query => {
             return query['query'] === '*:*';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: '', wskey: apiKey });
+        await search({ query: '' });
 
         nock.isDone().should.be.true;
       });
 
-      it('filters by reusability', async () => {
+      it('filters by reusability', async() => {
         baseRequest
           .query(query => {
             return query.reusability === 'open';
           })
           .reply(200, defaultResponse);
 
-        await search({ query: 'anything', reusability: 'open', wskey: apiKey });
+        await search({ query: 'anything', reusability: 'open' });
 
         nock.isDone().should.be.true;
+      });
+
+      it('supports API override', async() => {
+        const overrideapiOrigin = 'https://api.example.org';
+        nock(overrideapiOrigin).get(apiEndpoint).query(true).reply(200, defaultResponse);
+
+        await search({ query: 'anything' }, { origin: overrideapiOrigin });
+
+        nock.isDone().should.be.true;
+      });
+
+      context('with origin supplied', () => {
+        const customOrigin = 'https://api.example.org';
+        it('queries that API', async() => {
+          nock(customOrigin)
+            .get(apiEndpoint)
+            .query(true)
+            .reply(200, defaultResponse);
+
+          await search({ query: 'anything' }, { origin: customOrigin });
+
+          nock.isDone().should.be.true;
+        });
       });
     });
 
     describe('API response', () => {
-      describe('with error', () => {
-        it('returns API error message', () => {
+      context('with error', () => {
+        it('returns API error message and status code', async() => {
           const errorMessage = 'Invalid query parameter.';
           baseRequest
             .query(true)
@@ -138,15 +180,21 @@ describe('plugins/europeana/search', () => {
               error: errorMessage
             });
 
-          const response = search({ query: 'NOT ', wskey: apiKey });
+          let error;
+          try {
+            await search({ query: 'NOT ' });
+          } catch (e) {
+            error = e;
+          }
 
-          response.should.be.rejectedWith(errorMessage);
+          error.message.should.eq(errorMessage);
+          error.statusCode.should.eq(400);
         });
       });
 
-      describe('with `items`', () => {
+      context('with `items`', () => {
         function searchResponse() {
-          return search({ query: 'painting', wskey: apiKey });
+          return search({ query: 'painting' });
         }
 
         const apiResponse = {
@@ -157,6 +205,9 @@ describe('plugins/europeana/search', () => {
               type: 'IMAGE',
               dcTitleLangAware: {
                 en: ['A painting']
+              },
+              dcDescriptionLangAware: {
+                en: ['More information about this painting']
               },
               dcCreatorLangAware: {
                 en: ['An artist']
@@ -174,19 +225,19 @@ describe('plugins/europeana/search', () => {
             .reply(200, apiResponse);
         });
 
-        it('returns results', async () => {
+        it('returns results', async() => {
           const response = await searchResponse();
 
           response.results.length.should.eq(apiResponse.items.length);
         });
 
-        it('returns totalResults', async () => {
+        it('returns totalResults', async() => {
           const response = await searchResponse();
 
           response.totalResults.should.eq(apiResponse.totalResults);
         });
 
-        it('returns lastAvailablePage as false', async () => {
+        it('returns lastAvailablePage as false', async() => {
           const response = await searchResponse();
 
           response.lastAvailablePage.should.eq(false);
@@ -194,10 +245,10 @@ describe('plugins/europeana/search', () => {
 
         describe('when page is at the API limit', () => {
           function searchResponse() {
-            return search({ query: 'painting', wskey: apiKey, page: 42 });
+            return search({ query: 'painting', page: 42 });
           }
 
-          it('returns lastAvailablePage as true', async () => {
+          it('returns lastAvailablePage as true', async() => {
             const response = await searchResponse();
 
             response.lastAvailablePage.should.eq(true);
@@ -205,49 +256,47 @@ describe('plugins/europeana/search', () => {
         });
 
         describe('each member of .results', () => {
-          it('includes Europeana ID in .europeanaId', async () => {
+          it('includes Europeana ID in .europeanaId', async() => {
             const response = await searchResponse();
 
             response.results[0].europeanaId.should.eq(apiResponse.items[0].id);
           });
 
-          it('includes URL path of record page in .linkTo', async () => {
+          it('includes dcTitleLangAware in .dcTitle', async() => {
             const response = await searchResponse();
 
-            response.results[0].linkTo.should.eq(`record${apiResponse.items[0].id}`);
+            response.results[0].dcTitle.should.deep.eq(apiResponse.items[0].dcTitleLangAware);
           });
 
-          describe('.fields', () => {
-            it('includes dcTitleLangAware in .dcTitle', async () => {
-              const response = await searchResponse();
+          it('includes dcDescriptionLangAware in .dcTitle', async() => {
+            const response = await searchResponse();
 
-              response.results[0].fields.dcTitle.should.deep.eq(apiResponse.items[0].dcTitleLangAware['en']);
-            });
+            response.results[0].dcDescription.should.deep.eq(apiResponse.items[0].dcDescriptionLangAware);
+          });
 
-            it('includes dcCreatorLangAware in .dcCreator', async () => {
-              const response = await searchResponse();
+          it('includes dcCreatorLangAware in .dcCreator', async() => {
+            const response = await searchResponse();
 
-              response.results[0].fields.dcCreator.should.deep.eq(apiResponse.items[0].dcCreatorLangAware['en']);
-            });
+            response.results[0].dcCreator.should.deep.eq(apiResponse.items[0].dcCreatorLangAware);
+          });
 
-            it('includes dataProvider in .edmDataProvider', async () => {
-              const response = await searchResponse();
+          it('includes dataProvider in .edmDataProvider', async() => {
+            const response = await searchResponse();
 
-              response.results[0].fields.edmDataProvider.should.deep.eq(apiResponse.items[0].dataProvider);
-            });
+            response.results[0].edmDataProvider.should.deep.eq(apiResponse.items[0].dataProvider);
           });
         });
 
         describe('facets', () => {
           describe('when absent', () => {
-            it('returns `null`', async () => {
+            it('returns `[]`', async() => {
               baseRequest
                 .query(true)
                 .reply(200, defaultResponse);
 
-              const response = await search({ query: 'anything', wskey: apiKey });
+              const response = await search({ query: 'anything' });
 
-              (response.facets === null).should.be.true;
+              response.facets.should.eql([]);
             });
           });
 
@@ -275,8 +324,8 @@ describe('plugins/europeana/search', () => {
                 .reply(200, apiResponse);
             });
 
-            it('are each returned as-is', async () => {
-              const response = await search({ query: 'anything', wskey: apiKey });
+            it('are each returned as-is', async() => {
+              const response = await search({ query: 'anything' });
 
               response.facets.should.deep.eql(apiResponse.facets);
             });
@@ -286,59 +335,124 @@ describe('plugins/europeana/search', () => {
     });
   });
 
-  describe('pageFromQuery()', () => {
-    describe('with no value', () => {
-      it('returns `1`', () => {
-        for (const queryPage of [null, undefined]) {
-          pageFromQuery(queryPage).should.eq(1);
-        }
+  describe('addContentTierFilter', () => {
+    context('with no qf', () => {
+      it('returns the qf with the tier 1-4 filter applied', () => {
+        const expected = ['contentTier:(1 OR 2 OR 3 OR 4)'];
+        addContentTierFilter().should.deep.eql(expected);
       });
     });
-
-    describe('with invalid value', () => {
-      it('returns `null`', () => {
-        for (const queryPage of ['0', '-1', '3.5', 'one', 'last']) {
-          (pageFromQuery(queryPage) === null).should.be.true;
-        }
+    context('with an empty array as qf', () => {
+      const qf = [];
+      it('returns the qf with the tier 1-4 filter applied', () => {
+        const expected = ['contentTier:(1 OR 2 OR 3 OR 4)'];
+        addContentTierFilter(qf).should.deep.eql(expected);
       });
     });
-
-    describe('with valid value', () => {
-      it('returns it typecast as `Number`', () => {
-        for (const queryPage of ['1', '2', '20']) {
-          pageFromQuery(queryPage).should.eq(Number(queryPage));
-        }
+    context('with a single non contentTier qf', () => {
+      const qf = 'TYPE:"IMAGE"';
+      it('returns the qf with the tier 1-4 filter applied', () => {
+        const expected = ['TYPE:"IMAGE"', 'contentTier:(1 OR 2 OR 3 OR 4)'];
+        addContentTierFilter(qf).should.deep.eql(expected);
+      });
+    });
+    context('with a contentTier qf', () => {
+      const qf = 'contentTier:3';
+      it('returns the qf as is', () => {
+        const expected = ['contentTier:3'];
+        addContentTierFilter(qf).should.deep.eql(expected);
+      });
+    });
+    context('with multiple qfs', () => {
+      const qf = ['TYPE:"IMAGE"', 'REUSABILITY:"open"'];
+      it('returns the qf with the tier filter appended', () => {
+        const expected = ['TYPE:"IMAGE"', 'REUSABILITY:"open"', 'contentTier:(1 OR 2 OR 3 OR 4)'];
+        addContentTierFilter(qf).should.deep.eql(expected);
+      });
+    });
+    context('with a contentTier qf of "*"', () => {
+      const qf = 'contentTier:*';
+      it('returns the qf without the qf', () => {
+        const expected = [];
+        addContentTierFilter(qf).should.deep.eql(expected);
+      });
+    });
+    context('with a collection qf', () => {
+      const qf = ['collection:art'];
+      it('returns the qf with the tier 2-4 filter applied', () => {
+        const expected = ['collection:art', 'contentTier:(2 OR 3 OR 4)'];
+        addContentTierFilter(qf).should.deep.eql(expected);
       });
     });
   });
 
-  describe('selectedFacetsFromQuery()', () => {
-    describe('with `null` query qf', () => {
-      it('returns {}', () => {
-        selectedFacetsFromQuery({ qf: null }).should.eql({});
+
+  describe('rangeToQueryParam', () => {
+    context('with no start or end', () => {
+      it('returns "[* TO *]"', () => {
+        const expected = '[* TO *]';
+        rangeToQueryParam({}).should.eql(expected);
       });
     });
-
-    describe('with single query qf value', () => {
-      it('returns it in an array on a property named for the facet', () => {
-        selectedFacetsFromQuery({ qf: 'TYPE:"IMAGE"' }).should.deep.eql({ 'TYPE': ['IMAGE'] });
+    context('with only a start', () => {
+      it('returns "[START TO *]"', () => {
+        const expected = '[START TO *]';
+        rangeToQueryParam({ start: 'START' }).should.deep.eql(expected);
       });
     });
-
-    describe('with multiple query qf values', () => {
-      it('returns them in arrays on properties named for each facet', () => {
-        const query = { qf: ['TYPE:"IMAGE"', 'TYPE:"VIDEO"', 'REUSABILITY:"open"'] };
-        const expected = { 'TYPE': ['IMAGE', 'VIDEO'], 'REUSABILITY': ['open'] };
-
-        selectedFacetsFromQuery(query).should.deep.eql(expected);
+    context('with only an end', () => {
+      it('returns "[* TO END]"', () => {
+        const expected = '[* TO END]';
+        rangeToQueryParam({ end: 'END' }).should.deep.eql(expected);
       });
     });
+    context('with both start and end', () => {
+      it('returns "[START TO END]"', () => {
+        const expected = '[START TO END]';
+        rangeToQueryParam({ start: 'START', end: 'END' }).should.deep.eql(expected);
+      });
+    });
+  });
 
-    describe('with reusability values', () => {
-      it('returns them in an array on REUSABILITY property', () => {
-        const query = { reusability: 'open,restricted' };
-        const expected = { 'REUSABILITY': ['open', 'restricted'] };
-        selectedFacetsFromQuery(query).should.deep.eql(expected);
+  describe('rangeFromQueryParam', () => {
+    context('when the pattern does NOT match', () => {
+      it('returns null', () => {
+        (rangeFromQueryParam('[abc OR xyz]') === null).should.be.true;
+      });
+    });
+    context('with blank start and end values', () => {
+      it('returns both values', () => {
+        (rangeFromQueryParam('[ TO ]') === null).should.be.true;
+      });
+    });
+    context('with only a start', () => {
+      it('returns null for the end', () => {
+        const expected = { start: 'START', end: null };
+        rangeFromQueryParam('[START TO *]').should.deep.eql(expected);
+      });
+    });
+    context('with only an end', () => {
+      it('returns null for the start', () => {
+        const expected = { start: null, end: 'END' };
+        rangeFromQueryParam('[* TO END]').should.deep.eql(expected);
+      });
+    });
+    context('with both start and end', () => {
+      it('returns both values', () => {
+        const expected = { start: 'START', end: 'END' };
+        rangeFromQueryParam('[START TO END]').should.deep.eql(expected);
+      });
+    });
+    context('with special characters', () => {
+      it('returns both values', () => {
+        const expected = { start: '10/Новембар/2000', end: 'Value with spaces' };
+        rangeFromQueryParam('[10/Новембар/2000 TO Value with spaces]').should.deep.eql(expected);
+      });
+    });
+    context('with quoted values', () => {
+      it('returns both values', () => {
+        const expected = { start: '"START"', end: '\'END\'' };
+        rangeFromQueryParam('["START" TO \'END\']').should.deep.eql(expected);
       });
     });
   });

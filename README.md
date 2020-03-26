@@ -1,9 +1,15 @@
-# Incubator for Europeana Portal in vue.js + nuxt.js
- [![Build Status](https://travis-ci.com/europeana/incubator-portal-vue-nuxt.svg?branch=master)](https://travis-ci.com/europeana/incubator-portal-vue-nuxt) [![Maintainability](https://api.codeclimate.com/v1/badges/6d547010dcc180c40cf5/maintainability)](https://codeclimate.com/github/europeana/incubator-portal-vue-nuxt/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/6d547010dcc180c40cf5/test_coverage)](https://codeclimate.com/github/europeana/incubator-portal-vue-nuxt/test_coverage)
+# Europeana Collections portal, made with Vue.js + Nuxt.js
+ [![Build Status](https://travis-ci.com/europeana/portal.js.svg?branch=master)](https://travis-ci.com/europeana/portal.js) [![Maintainability](https://api.codeclimate.com/v1/badges/0510faf1055ef06c5938/maintainability)](https://codeclimate.com/github/europeana/portal.js/maintainability)
+
+## Prerequisites
+
+1. Node.js version 12, and npm
+2. [Contentful](https://www.contentful.com/) CMS account
+
 ## Build Setup
 
-``` bash
-# install dependencies
+```bash
+# install package dependencies
 $ npm install
 
 # serve with hot reload at localhost:3000
@@ -24,9 +30,12 @@ $ npm run build-storybook
 
 ```
 
-For detailed explanation on how things work, checkout [Nuxt.js docs](https://nuxtjs.org).
+For detailed explanation on how things work, refer to [Nuxt.js docs](https://nuxtjs.org).
 
 ## Testing
+
+To run end-to-end tests, you will need Docker Engine and Compose installed and
+the docker service running.
 
 Run tests with:
 
@@ -38,35 +47,42 @@ $ npm test
 
 To run a single file: `npm run test:unit -g tests/unit/[REST_OF_FILE_PATH]`
 
-### Running end to end tests only
+### Running end-to-end tests only
 
 `npm run test:e2e` and `npm run test:e2e:ci` just run everything.
 
-
-If you've manually started the test server with: `npm run build:test && npm run start:test`, then you can for example:
+If you've manually started the test server with: `NODE_ENV=test npm run stack:up`, then you can for example:
 
 Run only the header.feature file using path.
 
-```npm run test:chrome:headless tests/features/header.feature```
+```shell
+npm run test:chrome:headless tests/features/header.feature
+```
 
 
-Run only the "header" feature using it's name.
+Run only the "header" feature test using its name.
 
-```npm run test:chrome:headless -- -p all --name header```
+```shell
+npm run test:chrome:headless -- -p all --name header
+```
 
 
 Run only the "header" feature in the header file.
 
-```npm run test:chrome:headless tests/features/header.feature -- --name header```
-
+```shell
+npm run test:chrome:headless tests/features/header.feature -- --name header
+```
 
 Run everything with your driver of choice.
 
-```npm run test:chrome:headless -- -p all```
+```
+npm run test:chrome:headless -- -p all
+```
 
+`test:chrome:headless` can be substituted for the other avialable driver commands `test:gecko` and `test:chrome`.
 
-`test:chrome:headless` can be substituited for the other avialable driver commands `test:gecko` and `test:chrome`.
-
+Be aware however that with `geckodriver` some tests are known to fail as it is not yet feature complete.
+It is therefore at present of limited use.
 
 
 ## License

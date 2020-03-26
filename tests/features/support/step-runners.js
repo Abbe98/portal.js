@@ -3,16 +3,8 @@
  * @see {@link http://nightwatchjs.org/api#expect-api|Nightwatch Expect assertions}
  */
 
-const { client } = require('nightwatch-api');
-const { europeanaId } = require('./europeana-identifiers.js');
-const { url } = require('../config/nightwatch.conf.js').test_settings.default.globals;
-
-const pages = {
-  'home page': `${url}/`,
-  'search page': `${url}/search`,
-  'record page': `${url}/record${europeanaId()}`,
-  'first page of results': `${url}/search?query=&page=1`
-};
+const { client, createSession, closeSession, startWebDriver, stopWebDriver } = require('nightwatch-api');
+const { pageUrl } = require('./pages');
 
 /**
  * Generate CSS selector for `data-qa` attribute values.
@@ -31,78 +23,224 @@ function qaSelector(qaElementNames) {
     .join(' ');
 }
 
-function pageUrl(pageName) {
-  return pageName.startsWith('/') ? `${url}${pageName}` : pages[pageName];
-}
-
 module.exports = {
-  checkTheCheckbox: async function (inputValue) {
-    await client.click(`input[type="checkbox"][value="${inputValue}"]`);
+  async amOnPageNumber(page) {
+    await client.url(async(currentUrl) => {
+      const pageFromUrl = await new URL(currentUrl.value).searchParams.get('page');
+      await client.expect(Number(pageFromUrl)).to.eq(page);
+    });
+    const navSelector = qaSelector('pagination navigation');
+    const activeLinkSelector = navSelector + ` li.active a[aria-posinset="${page}"]`;
+    await client.waitForElementVisible(activeLinkSelector);
   },
-  clickOnTheTarget: async function (qaElementNames) {
+  async checkPageAccesibility() {
+    let axeOptions = {
+      reporter: 'v2',
+      runOnly: {
+        type: 'tags',
+        values: ['wcag2a', 'wcag2aa']
+      },
+      rules: {
+        'aria-roles': { enabled: false } // https://github.com/bootstrap-vue/bootstrap-vue/issues/2921 + https://github.com/dequelabs/axe-core/issues/1462
+      }
+    };
+
+    await client.initAccessibility().assert.accessibility('html', axeOptions);
+  },
+  escapeCssAttributeSelector(selector) {
+    return selector.replace(/"/g, '\\"');
+  },
+  async checkTheCheckbox(inputName, inputValue) {
+    const selector = `input[type="checkbox"][name="${inputName}"][value="${this.escapeCssAttributeSelector(inputValue)}"]`;
+    await client.getAttribute(selector, 'id', async(result) => {
+      const checkboxId = result.value;
+      const labelSelector = `label[for="${checkboxId}"]`;
+      client.click(labelSelector);
+    });
+  },
+  async checkTheRadio(inputName, inputValue) {
+    const selector = `input[type="radio"][name="${inputName}"][value="${this.escapeCssAttributeSelector(inputValue)}"]`;
+    await client.getAttribute(selector, 'id', (result) => {
+      const radioId = result.value;
+      const labelSelector = `label[for="${radioId}"]`;
+      client.click(labelSelector);
+    });
+  },
+  async clickOnTheTarget(qaElementNames) {
     const selector = qaSelector(qaElementNames);
-    await client.expect.element(selector).to.be.visible;
+    await client.waitForElementVisible(selector);
     await client.click(selector);
   },
-  clickOnLink: async function (href) {
-    await client.expect.element(`a[href="${href}"]`).to.be.visible;
-    await client.click(`a[href="${href}"]`);
+  async clickOnLink(href) {
+    const selector = `a[href="${href}"]`;
+    await client.waitForElementVisible(selector);
+    client.click(selector);
   },
-  countTarget: async (count, qaElementNames) => {
+  countTarget: async(count, qaElementNames) => {
     await client.elements('css selector', qaSelector(qaElementNames), async(result) => {
       await client.expect(result.value).to.have.lengthOf(count);
     });
   },
-  matchMetaLabelAndValue: async (label, value) => {
-    await client.elements('xpath', '//strong[contains(text(),"' + label + '")]/parent::div/parent::div//span[contains(text(),"' + value + '")]', async(result) => {
+  countTargetByNameAttribute: async(count, inputName) => {
+    const inputSelector = `input[name="${inputName}"]`;
+    await client.elements('css selector', inputSelector, async(result) => {
+      await client.expect(result.value).to.have.lengthOf(count);
+    });
+  },
+  pressKey: async(key) => {
+    if (key.length > 1) {
+      key = client.Keys[key];
+    }
+    client.keys(key);
+  },
+  matchMetaLabelAndValue: async(label, value) => {
+    await client.elements('xpath', '//label[contains(text(),"' + label + '")]/parent::div//ul/li[contains(text(),"' + value + '")]', async(result) => {
       await client.expect(result.value).to.have.lengthOf(1);
     });
   },
-  matchMetaLabelAndValueOrValue: async (label, value, altValue) => {
-    await client.elements('xpath', '//strong[contains(text(),"' + label + '")]/parent::div/parent::div//span[contains(text(),"' + value + '")]', async(result) => {
-      if (result.value.length > 0) {
-        await client.expect(result.value).to.have.lengthOf(1);
-      } else {
-        await client.elements('xpath', '//strong[contains(text(),"' + label + '")]/parent::div/parent::div//span[contains(text(),"' + altValue + '")]', async(result) => {
-          await client.expect(result.value).to.have.lengthOf(1);
-        });
-      }
+  matchMetaLabelAndValueOrValue: async(label, value, altValue) => {
+    await client.elements('xpath', '//label[contains(text(),"' + label + '")]/parent::div//ul/li[contains(text(),"' + value + '") or contains(text(),"' + altValue + '")]', async(result) => {
+      await client.expect(result.value).to.have.lengthOf(1);
     });
   },
-  doNotSeeATarget: function (qaElementNames) {
+  doNotSeeATarget(qaElementNames) {
+    client.expect.element(qaSelector(qaElementNames)).to.not.be.visible;
+  },
+  doNotHaveATarget(qaElementNames) {
     client.expect.element(qaSelector(qaElementNames)).to.not.be.present;
   },
-  enterTextInTarget: async function (text, qaElementName) {
+  async enterTextInTarget(text, qaElementName) {
     const selector = qaSelector(qaElementName);
-    await client.expect.element(selector).to.be.visible;
-    await client.setValue(selector, text);
+    await client.clearValue(selector);
+    await client.waitForElementVisible(selector);
+    client.setValue(selector, text);
   },
-  makeSnapShot: async function (pageName) {
+  async observeTargetHasClass(qaElementName, klass) {
+    await client.getAttribute(qaSelector(qaElementName), 'class', async(result) => {
+      await client.expect(result.value.split(' ')).to.include(klass);
+    });
+  },
+  async openAPage(pageName) {
+    await client.url(pageUrl(pageName));
+  },
+  async acceptCookies() {
+    await client.expect.element('.cookie-disclaimer').to.be.visible;
+    await client.click('.cookie-disclaimer .accept-btn');
+    await client.expect.element('.cookie-disclaimer').to.not.be.visible;
+  },
+  async makeSnapShot: async function (pageName) {
     await client.percySnapshot(pageName);
   },
-  openAPage: function (pageName) {
-    client.url(pageUrl(pageName));
+  async havePreviouslyAcceptedCookies() {
+    /* eslint-disable prefer-arrow-callback */
+    /* DO NOT MAKE INTO A ARROW FUNCTION - If you do, it will break the tests */
+    await client.execute(function() {
+      localStorage.cookieConsent = 'accepted';
+    }, []);
+    /* eslint-enable prefer-arrow-callback */
   },
-  seeALinkInTarget: async function (linkHref, qaElementName) {
+  async haveNotYetAcceptedCookies() {
+    /* eslint-disable prefer-arrow-callback */
+    /* DO NOT MAKE INTO A ARROW FUNCTION - If you do, it will break the tests */
+    await client.execute(function() {
+      localStorage.cookieConsent = null;
+    }, []);
+    /* eslint-enable prefer-arrow-callback */
+  },
+  async paginateToPage(page) {
+    const containerSelector = qaSelector('pagination navigation');
+    await client.waitForElementVisible(containerSelector);
+    const selector = containerSelector + ` a[aria-posinset="${page}"]`;
+    await client.waitForElementVisible(selector);
+
+    await client.click(selector);
+  },
+  async preferBrowserLanguage(locale) {
+    const browserEnv = (process.env.browser || 'gecko') + `-${locale}`;
+    const nightwatchApiOptions = {
+      configFile: 'tests/features/config/nightwatch.conf.js',
+      env: browserEnv,
+      silent: true
+    };
+
+    await closeSession();
+    await stopWebDriver();
+
+    await startWebDriver(nightwatchApiOptions);
+    await createSession(nightwatchApiOptions);
+  },
+  async seeACheckedRadio(inputName, inputValue) {
+    const radioSelector = `input[type="radio"][name="${inputName}"][value="${inputValue}"]:checked`;
+
+    await client.expect.element(radioSelector).to.be.present;
+  },
+  async seeALinkInTarget(linkHref, qaElementName) {
     await client.expect.element(qaSelector(qaElementName) + ` a[href="${linkHref}"]`).to.be.visible;
   },
-  seeATarget: async function (qaElementNames) {
-    await client.expect.element(qaSelector(qaElementNames)).to.be.visible;
+  async seeATarget(qaElementNames) {
+    const selector = qaSelector(qaElementNames);
+    await client.expect.element(selector).to.be.visible;
   },
-  seeATargetWithText: async function (qaElementNames, text) {
+  async seeATargetWithText(qaElementNames, text) {
     await client.expect.element(qaSelector(qaElementNames)).text.to.contain(text);
   },
-  shouldBeOn: async function (pageName) {
+  async seeASectionHeadingWithText(headingLevel, text) {
+    await client.expect.element(`h${headingLevel}`).text.to.contain(text);
+  },
+  async seeTextInTargetPlaceholder(text, qaElementNames) {
+    await client.expect.element(qaSelector(qaElementNames)).to.have.attribute('placeholder').to.contain(text);
+  },
+  async seeTextInTarget(text, qaElementName) {
+    const selector = qaSelector(qaElementName);
+    await client.getValue(selector, async(result) => {
+      await client.expect(result.value).to.eq(text);
+    });
+  },
+  async selectSearchResultsView(viewName) {
+    /* eslint-disable prefer-arrow-callback */
+    /* DO NOT MAKE INTO A ARROW FUNCTION - If you do, it will break the tests */
+    await client.execute(function(viewName) {
+      localStorage.searchResultsView = viewName;
+      sessionStorage.searchResultsView = viewName;
+      return true;
+    }, [viewName]);
+    /* eslint-enable prefer-arrow-callback */
+  },
+  async doNotSeeTextInTarget(text, qaElementName) {
+    const selector = qaSelector(qaElementName);
+    await client.waitForElementVisible(selector);
+    await client.getValue(selector, async(result) => {
+      await client.expect(result.value).to.not.eq(text);
+    });
+  },
+  async shouldBeOn(pageName) {
     // TODO: update if a less verbose syntax becomes available.
     // See https://github.com/nightwatchjs/nightwatch/issues/861
-    await client.url(async (currentUrl) => {
+    await client.url(async(currentUrl) => {
       await client.expect(currentUrl.value).to.eq(pageUrl(pageName));
     });
   },
-  waitSomeSeconds: async function (seconds) {
+  async shouldNotBeOn(pageName) {
+    await client.url(async(currentUrl) => {
+      await client.expect(currentUrl.value).not.to.eq(pageUrl(pageName));
+    });
+  },
+  async waitSomeSeconds(seconds) {
     await client.pause(seconds * 1000);
   },
-  waitForTargetToBeVisible: async function (qaElementName) {
+  async waitForTargetToBeVisible(qaElementName) {
     await client.waitForElementVisible(qaSelector(qaElementName));
+  },
+  async waitForThePageToLoad() {
+    await client.waitForElementPresent('.nuxt-progress');
+    await client.waitForElementNotPresent('.nuxt-progress');
+  },
+  async goBack() {
+    await client.back();
+  },
+  async searchFor(query) {
+    await this.waitForTargetToBeVisible('search box');
+    await this.enterTextInTarget(query, 'search box');
+    await this.clickOnTheTarget('search button');
   }
 };

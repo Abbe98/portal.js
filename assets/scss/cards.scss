@@ -1,0 +1,248 @@
+.content-card {
+  background: $white;
+  border-radius: $border-radius-small;
+  box-shadow: $boxshadow-small;
+  color: $black;
+  font-size: $font-size-small;
+  height: auto;
+  line-height: 1.1875rem;
+  transition: box-shadow 0.25s;
+
+  &.card {
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: $bp-medium) {
+    min-height: 20rem;
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+  }
+
+  .card-img {
+    display: flex;
+    flex: 1 1 auto;
+    max-height: 10rem;
+    min-height: 10rem;
+    width: 100%;
+
+    @media (min-width: $bp-medium) {
+      max-height: 13rem;
+    }
+
+    img {
+      border-radius: 4px 4px 0 0;
+      object-fit: cover;
+      width: 100%;
+    }
+  }
+
+  .card-body {
+    flex: 0;
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .card-subtitle {
+    color: $mediumgrey;
+    font-size: $font-size-extrasmall;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .card-title:last-child,
+  .card-subtitle:last-child {
+    margin-bottom: 0;
+  }
+
+  .card-text {
+    color: $mediumgrey;
+
+    &:last-of-type p {
+      margin-bottom: 0;
+    }
+  }
+
+  .card-link {
+    min-height: 100%;
+    color: $black;
+    &:hover {
+      color: $black;
+    }
+  }
+
+  &.entity-card {
+    .card-img {
+      position: relative;
+      &::after {
+        border-bottom: 88px solid $white;
+        border-left: 44px solid transparent;
+        bottom: 0;
+        content: '';
+        display: block;
+        height: 0;
+        position: absolute;
+        right: 0;
+        width: 0;
+      }
+    }
+
+    @media (min-width: $bp-medium) {      
+      min-height: auto;
+    }
+  }
+
+  &.mini-card {
+    min-height: auto;
+    padding: 1rem;
+
+    a {
+      flex-direction: row;
+      justify-content: space-between;
+
+      .card-img {
+        border-radius: 4px;
+        display: block;
+        flex: 0 0 auto;
+        height: 80px;
+        min-height: initial;
+        order: 2;
+        overflow: hidden;
+        position: relative;
+        width: 80px;
+        
+        img {
+          height: 80px;
+          margin: 0;
+          position: absolute;
+        }
+
+        &:after {
+          content: '';
+          display: block;
+          padding-bottom: 100%;
+          width: 100%;
+        }
+      }
+
+      .card-title {
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+
+      .card-body {
+        flex-grow: 1;
+        margin-right: 1rem;
+        order: 1;
+        padding: 0;
+        width: 55%;
+      }
+
+      .card-text {
+        color: $blue;
+      }      
+    }    
+  }
+
+  &.list-card {
+    @media (min-width: $bp-medium) {
+      min-height: 0;
+
+      a {
+        flex-direction: row;
+        justify-content: space-between;
+      
+        .card-img {
+          display: inline-block;
+          height: 13rem;
+          max-height: none;
+          min-height: 0;
+          order: 2;
+          width: 200px;
+
+          img {
+            border-radius: 0 calc(0.25rem - 1px) calc(0.25rem - 1px) 0;
+            height: 100%;
+          }
+        }
+
+        .card-body {
+          flex: none;
+          padding-right: 2rem;
+          width: calc(100% - 200px);
+        }
+      }
+    }
+  }
+
+  &:hover {
+    box-shadow: $boxshadow-large;
+  }
+}
+
+.card-group-list .card,
+.card-deck-3-cols .card,
+.card-deck-4-cols .card {
+  flex: 0 0 100%;
+}
+
+@media (min-width: $bp-medium) {
+  .card-deck-3-cols .card {
+    flex: 0 0 calc(100% / 3 - #{$grid-gutter*2});
+  }
+
+  .card-deck-4-cols .card {
+    flex: 0 0 calc(100% / 2 - #{$grid-gutter*2});
+  }
+}
+
+@media (min-width: $bp-large) {
+  .card-deck-4-cols .card {
+    flex: 0 0 calc(100% / 4 - #{$grid-gutter*2});
+  }
+}
+
+.is-external-link.card-link .card-title:after {
+  content: '\e900';
+  @extend .icon-font;
+}
+
+.masonry {
+  display: inline-block;
+  columns: 1;
+  column-gap: 0;
+  width: 100%;
+
+  @media (min-width: $bp-small) {
+    columns: 2;
+    column-gap: 1rem;
+  }
+
+  @media (min-width: $bp-large) {
+    columns: 4;
+  }
+
+  .content-card {
+    break-inside: avoid;
+    min-height: initial;
+    transform: translateZ(0);
+    width: 100%;
+
+    a {
+      .card-img {
+        min-height: 12rem;
+        max-height: initial;
+      }
+    }
+  }
+}
