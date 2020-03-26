@@ -46,7 +46,7 @@
     "test:e2e": "cross-env NODE_ENV=test npm run stack:up:detach && npm run test:chrome -- -p all; exit=$?; npm run stack:down; exit $exit",
     "test:gecko": "cross-env browser=gecko cucumber-js --no-strict",
     "test:unit": "vue-cli-service test:unit --include tests/unit/setup",
-    "test:e2epercy": "percy exec -- concurrently 'npm run build:test && npm run start:test' 'npm run test:chrome -- -p all && npm run test:gecko -- -p all' --success first --kill-others"
+    "test:e2epercy": "percy exec -- npm test"
   },
   "dependencies": {
     "@elastic/apm-rum": "^4.7.0",

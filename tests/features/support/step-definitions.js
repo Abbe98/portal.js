@@ -135,5 +135,5 @@ defineStep('I search for {string}', (query) =>
   i.searchFor(query));
 
 defineStep('I make a snapshot of (a/an/the)( ){target}', (pageName) =>
-  i.makeSnapShot(pageName));
+  i.takeSnapShot(pageName));
 

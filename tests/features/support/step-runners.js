@@ -128,7 +128,7 @@ module.exports = {
     await client.click('.cookie-disclaimer .accept-btn');
     await client.expect.element('.cookie-disclaimer').to.not.be.visible;
   },
-  async makeSnapShot: async function (pageName) {
+  async takeSnapShot (pageName) {
     await client.percySnapshot(pageName);
   },
   async havePreviouslyAcceptedCookies() {
