@@ -192,6 +192,24 @@
       NotificationBanner
     },
 
+    async middleware({ query, params, res }) {
+      const asJSON = process.server && (query.format === 'json');
+      if (!asJSON) return;
+
+      try {
+        const result = await getRecord(`/${params.pathMatch}`, { origin: query.recordApi, raw: true });
+        res.send(result.data);
+        // res.end();
+        // return res;
+      } catch (error) {
+        console.log('error', error);
+        res.statusCode = (typeof error.statusCode !== 'undefined') ? error.statusCode : 500;
+        res.send(error);
+        // res.end();
+        // return res;
+      }
+    },
+
     data() {
       return {
         agents: null,

@@ -259,7 +259,7 @@ export function getRecord(europeanaId, options = {}) {
     }
   })
     .then((response) => {
-      return {
+      return options.raw ? response : {
         record: parseRecordDataFromApiResponse(response),
         error: null
       };
