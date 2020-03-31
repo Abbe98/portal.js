@@ -1,0 +1,17 @@
+{
+  "name": "europeana-apis",
+  "version": "0.0.1",
+  "description": "Europeana APIs",
+  "main": "index.js",
+  "license": "EUPL-1.2",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "deepmerge": "^4.2.2",
+    "dotenv": "^8.2.0",
+    "lodash": "^4.17.15",
+    "qs": "^6.9.3"
+  },
+  "devDependencies": {
+    "cosmiconfig": "^6.0.0"
+  }
+}

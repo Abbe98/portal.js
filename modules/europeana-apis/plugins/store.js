@@ -1,14 +1,10 @@
-const config = <%= JSON.stringify(options, null, 2) %>;
+import config from './config';
 
-export default ({ app, store }, inject) => {
-  app.$apis = config;
-  inject('apis', config);
-
+export default ({ store }) => {
   if (store) {
     store.registerModule('apis', {
       namespaced: true,
       state: {
-        configs: config,
         origin: null
       },
       mutations: {
@@ -18,7 +14,7 @@ export default ({ app, store }, inject) => {
       },
       getters: {
         config: (state) => {
-          return state.configs[state.origin] || state.configs.defaults;
+          return config[state.origin] || config.defaults;
         }
       }
     });

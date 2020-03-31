@@ -1,7 +1,7 @@
-const { cosmiconfigSync } = require('cosmiconfig');
-const merge = require('deepmerge');
+import { cosmiconfigSync } from 'cosmiconfig';
+import merge from 'deepmerge';
 
-const defaults = require('./defaults');
+import defaults from './defaults';
 
 const loadRuntimeConfiguration = () => {
   let rc = {};
@@ -33,4 +33,6 @@ const generateMultiOriginConfiguration = () => {
   return options;
 };
 
-module.exports = generateMultiOriginConfiguration();
+const config = generateMultiOriginConfiguration();
+
+export default config;

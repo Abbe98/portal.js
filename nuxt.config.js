@@ -85,14 +85,12 @@ module.exports = {
   */
   plugins: [
     '~/plugins/path',
-    '~/plugins/europeana',
     '~/plugins/vue/index',
     '~/plugins/i18n.js',
     '~/plugins/vue-filters'
   ],
 
   buildModules: [
-    '~/modules/apis',
     // Doc: https://www.elastic.co/guide/en/apm/agent/rum-js/current/configuration.html
     ['~/modules/elastic-apm', {
       serviceName: 'portal-js',
@@ -110,6 +108,7 @@ module.exports = {
   */
   modules: [
     '@nuxtjs/dotenv',
+    'europeana-apis',
     ['@nuxtjs/google-tag-manager', {
       id: process.env.GOOGLE_TAG_MANAGER_ID,
       pageTracking: true

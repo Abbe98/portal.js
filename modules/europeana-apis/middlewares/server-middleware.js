@@ -1,10 +1,10 @@
-const axios = require('axios');
-const express = require('express');
-const path = require('path');
+import axios from 'axios';
+import express from 'express';
+import path from 'path';
 
-const { requestOrigin } = require(path.resolve(__dirname, '../../plugins/http'));
+const { requestOrigin } = require(path.resolve(__dirname, '../../../plugins/http'));
 
-const config = require('./config');
+const config = require(path.resolve(__dirname, '../helpers/config'));
 
 const app = express();
 

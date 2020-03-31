@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   annotation: {
     // TODO: replace with API gateway origin when it works
     origin: 'https://annotations.europeana.eu',
