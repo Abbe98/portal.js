@@ -11,21 +11,17 @@
     data() {
       return {
         manifest: null,
-        MIRADOR_BUILD_PATH: 'https://unpkg.com/mirador@3.0.0-beta.3/dist',
+        MIRADOR_BUILD_PATH: 'https://unpkg.com/mirador@3.0.0-beta.6/dist',
         page: null,
+        plugins: [],
         uri: null
       };
     },
 
-    asyncData({ query }) {
-      return {
-        uri: query.uri
-      };
-    },
-    mounted() {
-      this.$nextTick(() => {
+    computed: {
+      config() {
         // Doc: https://github.com/ProjectMirador/mirador/blob/master/src/config/settings.js
-        const mirador = Mirador.viewer({ // eslint-disable-line no-undef
+        return {
           id: 'viewer',
           windows: [{
             manifestId: this.uri,
@@ -54,7 +50,19 @@
           workspaceControlPanel: {
             enabled: false
           }
-        });
+        };
+      }
+    },
+
+    asyncData({ query }) {
+      return {
+        uri: query.uri
+      };
+    },
+
+    mounted() {
+      this.$nextTick(() => {
+        const mirador = Mirador.viewer(this.config, this.plugins); // eslint-disable-line no-undef
 
         mirador.store.subscribe(() => {
           const miradorWindow = Object.values(mirador.store.getState().windows)[0]; // only takes one window into account at the moment
@@ -101,4 +109,3 @@
     outline: 2px solid $blue !important;
   }
 </style>
-
