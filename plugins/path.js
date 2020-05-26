@@ -1,4 +1,3 @@
-import { URL, URLSearchParams } from './url';
 import {
   sslNegotiationEnabled, routePermittedOnEitherScheme, routeOnDatasetBlacklist
 } from '../plugins/ssl';
