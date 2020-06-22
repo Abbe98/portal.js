@@ -6,13 +6,13 @@ exclude_patterns:
   - "**/*.stories.js"
 plugins:
   eslint:
-    enabled: true
-    channel: 'eslint-6'
-    config:
-      config: .eslintrc.js
-      extensions:
-        - .js
-        - .vue
+    enabled: false
+    # channel: 'eslint-6'
+    # config:
+    #   config: .eslintrc.js
+    #   extensions:
+    #     - .js
+    #     - .vue
   stylelint:
     enabled: true
     config:
